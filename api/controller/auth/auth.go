@@ -8,6 +8,7 @@ import (
 	"payhere/model"
 	"payhere/repository"
 	"payhere/service"
+	"payhere/util"
 
 	"github.com/gin-gonic/gin"
 )
@@ -89,14 +90,15 @@ func (h *authHTTPHandler) Login(c *gin.Context) {
 
 // Logout ...
 func (h *authHTTPHandler) Logout(c *gin.Context) {
-	// ctx := c.Request.Context()
+	ctx := c.Request.Context()
+	uid, _ := ctx.Value(util.OwnerKey).(string)
 
-	// auth, err := h.authSvc.Logout(ctx)
-	// if err != nil {
-	// 	rescode, msg := cutil.CauseError(err)
-	// 	cutil.Response(c, rescode, msg)
-	// 	return
-	// }
+	err := h.authSvc.Logout(ctx, uid)
+	if err != nil {
+		rescode, msg := cutil.CauseError(err)
+		cutil.Response(c, rescode, msg)
+		return
+	}
 
 	cutil.Response(c, http.StatusOK, "ok")
 }
