@@ -11,12 +11,13 @@ import (
 
 // UserAuth ...
 type UserAuth struct {
-	UID    string `json:"uid" gorm:"primaryKey"`
-	Phone  string `json:"phone" gorm:"type:varchar(13)"`
-	Secret string `json:"-" gorm:"type:longtext"`
+	UID          string `json:"uid" gorm:"primaryKey"`
+	Phone        string `json:"phone" gorm:"type:varchar(13)"`
+	SessionState string `json:"-" gorm:"type:longtext"`
+	Secret       string `json:"-" gorm:"type:longtext"`
 
-	Token    string `json:"-" gorm:"-"`
-	Password string `json:"password" gorm:"-"`
+	Password string         `json:"password" gorm:"-"`
+	Token    *UserAuthToken `json:"-" gorm:"-"`
 }
 
 var phoneRegex string = "01[016789]{1}[- .]?[0-9]{3,4}[- .]?[0-9]{4}([^0-9]+|$)"
@@ -54,29 +55,60 @@ func (ua UserAuth) LoginValidate(password string) bool {
 
 // SetToken ...
 func (ua *UserAuth) SetToken(secret string) {
+	session := uuid.NewString()
 	claims := &AuthJWTClaims{
-		UID:    ua.UID,
-		Expire: time.Now().Add(time.Minute * 30).UTC(),
+		Session: session,
+		UID:     ua.UID,
+		Exp:     time.Now().Add(time.Minute * 30).UTC().Unix(),
 	}
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	t, err := token.SignedString([]byte(secret))
+	access := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	accessToken, err := access.SignedString([]byte(secret))
 	if err != nil {
 		return
 	}
-	ua.Token = t
+
+	rclaims := &AuthJWTClaims{
+		Session: session,
+		UID:     ua.UID,
+		Exp:     time.Now().Add(time.Hour * 24).UTC().Unix(),
+	}
+	refresh := jwt.NewWithClaims(jwt.SigningMethodHS256, rclaims)
+	refreshToken, err := refresh.SignedString([]byte(secret))
+	if err != nil {
+		return
+	}
+
+	ua.SessionState = session
+	ua.Token = &UserAuthToken{
+		Access:  accessToken,
+		Refresh: refreshToken,
+	}
 }
 
 // GetHTTPResponse ...
 func (ua UserAuth) GetHTTPResponse() map[string]any {
-	return map[string]any{
-		"token": ua.Token,
-	}
+	return nil
 }
 
 // AuthJWTClaims ...
 type AuthJWTClaims struct {
-	UID    string    `json:"uid"`
-	Expire time.Time `json:"expire"`
+	Session string `json:"session"`
+	UID     string `json:"uid"`
+	Exp     int64  `json:"exp"`
 
 	jwt.RegisteredClaims
+}
+
+// UserAuthToken ...
+type UserAuthToken struct {
+	Access  string `json:"-"`
+	Refresh string `json:"-"`
+}
+
+// GetHTTPResponse ...
+func (at UserAuthToken) GetHTTPResponse() map[string]any {
+	return map[string]any{
+		"accessToken":  at.Access,
+		"refreshToken": at.Refresh,
+	}
 }

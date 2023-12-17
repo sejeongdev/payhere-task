@@ -35,10 +35,10 @@ func InitHandler(conf *config.ViperConfig, r *gin.Engine, db *gorm.DB, cancel <-
 	payhere := r.Group("/payhere")
 	// payhere.Use(middleware.JWTValidate(conf))
 
-	auth.NewHTTPAuthHandler(conf, payhere, authSvc)
-	user.NewHTTPUserHandler(conf, payhere, userSvc)
-	product.NewHTTPProductHandler(conf, payhere, productSvc)
-	shop.NewHTTPShopHandler(conf, payhere, shopSvc)
+	auth.NewHTTPAuthHandler(conf, payhere, authRepo, authSvc)
+	user.NewHTTPUserHandler(conf, payhere, authRepo, userSvc)
+	product.NewHTTPProductHandler(conf, payhere, authRepo, productSvc)
+	shop.NewHTTPShopHandler(conf, payhere, authRepo, shopSvc)
 
 	return nil
 }

@@ -7,6 +7,7 @@ import (
 	"payhere/config"
 	"payhere/model"
 	queryfilter "payhere/model/queryFilter"
+	"payhere/repository"
 	"payhere/service"
 
 	"github.com/gin-gonic/gin"
@@ -20,6 +21,7 @@ type shopHTTPHandler struct {
 func NewHTTPShopHandler(
 	conf *config.ViperConfig,
 	payhere *gin.RouterGroup,
+	authRepo repository.AuthRepository,
 	shopSvc service.ShopService,
 ) {
 	handler := &shopHTTPHandler{
@@ -29,7 +31,7 @@ func NewHTTPShopHandler(
 
 	shop := payhere.Group("/shop")
 
-	shop.Use(middleware.JWTValidate(conf))
+	shop.Use(middleware.JWTValidate(conf, authRepo))
 
 	shop.POST("", handler.NewShop)
 	shop.GET("/count", handler.GetShopCount)

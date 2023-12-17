@@ -57,6 +57,8 @@ func getDialector(conf *config.ViperConfig, dbprefix string) gorm.Dialector {
 type AuthRepository interface {
 	Register(ctx context.Context, auth *model.UserAuth) error
 	GetAuthByPhone(ctx context.Context, phone string) (*model.UserAuth, error)
+	GetUserAuthBySession(ctx context.Context, uid, session string) (auth *model.UserAuth, err error)
+	UpdateUserAuthSession(ctx context.Context, uid string, session string) (err error)
 }
 
 // UserRepository ...

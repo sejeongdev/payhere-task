@@ -56,3 +56,38 @@ func (g gormAuthRepository) GetAuthByPhone(ctx context.Context, phone string) (a
 	}
 	return auth, nil
 }
+
+// UpdateUserAuthSession ...
+func (g gormAuthRepository) UpdateUserAuthSession(ctx context.Context, uid string, session string) (err error) {
+	inCtx, cancel := util.WithTimeout(ctx, g.ctxTimeout)
+	defer cancel()
+
+	scope := g.Conn.WithContext(inCtx)
+	if err = scope.
+		Model(&model.UserAuth{}).
+		Where("uid = ?", uid).
+		Updates(map[string]any{
+			"session_state": session,
+		}).Error; err != nil {
+		return err
+	}
+	return nil
+}
+
+// GetUserAuthBySession ...
+func (g gormAuthRepository) GetUserAuthBySession(ctx context.Context, uid, session string) (auth *model.UserAuth, err error) {
+	inCtx, cancel := util.WithTimeout(ctx, g.ctxTimeout)
+	defer cancel()
+
+	scope := g.Conn.WithContext(inCtx)
+	scope = scope.Model(&model.UserAuth{}).
+		Where("uid = ? and session_state = ?", uid, session).
+		Find(&auth)
+	if err = scope.Error; err != nil {
+		return nil, err
+	}
+	if scope.RowsAffected == 0 {
+		return nil, errors.NotFound
+	}
+	return auth, nil
+}
