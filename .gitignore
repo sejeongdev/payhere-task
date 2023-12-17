@@ -1,0 +1,6 @@
+bin/
+db/
+go.mod
+go.sum
+pkg.list
+.vscode/*

@@ -1,0 +1,12 @@
+FROM alpine
+ARG BUILD_PKG=payhere
+ARG BUILD_PORT=20624
+ENV LANG ko_KR.UTF-8
+ENV LANGUAGE ko_KR.UTF-8
+
+WORKDIR /$BUILD_PKG
+COPY config/ ./config/
+COPY bin/ ./bin/
+
+EXPOSE $BUILD_PORT
+ENTRYPOINT ["bin/payhere"]

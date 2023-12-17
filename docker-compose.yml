@@ -1,0 +1,43 @@
+version: '3'
+services:
+  payheredb:
+    ports:
+      - "43306:3306"
+    image: mysql:5.7
+    container_name: payhere_db
+    volumes:
+      - "$PWD/db/data:/var/lib/mysql:cached"
+    environment:
+      MYSQL_ROOT_PASSWORD: mysqlvotmdnjem
+      MYSQL_DATABASE: default
+      MYSQL_USER: default
+      MYSQL_PASSWORD: default
+    platform: linux/amd64
+    networks:
+      - app_default
+
+  payhere:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        IMAGE_TAG: |-
+          ${VERSION:-local}
+    ports:
+      - "18080:18080"
+    environment:
+      - ENV=local
+      - DB_HOST=payhere_db
+      - DB_PORT=3306
+      - DB_NAME=payhere
+      - DB_PASS=payherepass
+    healthcheck:
+        test: ["CMD", "curl", "http://localhost:18080/healthCheck"]
+    depends_on:
+      - payheredb
+    networks:
+      - app_default
+
+networks:
+  app_default:
+    external: true
