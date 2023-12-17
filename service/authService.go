@@ -31,7 +31,7 @@ func (u authUsecase) Register(ctx context.Context, auth *model.UserAuth) (err er
 }
 
 // Login ...
-func (u authUsecase) Login(ctx context.Context, auth *model.UserAuth) (rauth *model.UserAuth, err error) {
+func (u authUsecase) Login(ctx context.Context, auth *model.UserAuth) (token *model.UserAuthToken, err error) {
 	dbauth, err := u.authRepo.GetAuthByPhone(ctx, auth.Phone)
 	if err != nil {
 		return nil, err
@@ -43,5 +43,17 @@ func (u authUsecase) Login(ctx context.Context, auth *model.UserAuth) (rauth *mo
 
 	dbauth.SetToken(u.conf.GetString("jwt_secret_key"))
 
-	return dbauth, nil
+	if err = u.authRepo.UpdateUserAuthSession(ctx, dbauth.UID, dbauth.SessionState); err != nil {
+		return nil, err
+	}
+
+	return dbauth.Token, nil
+}
+
+// Logout ...
+func (u authUsecase) Logout(ctx context.Context, uid string) (err error) {
+	if err = u.authRepo.UpdateUserAuthSession(ctx, uid, ""); err != nil {
+		return err
+	}
+	return nil
 }

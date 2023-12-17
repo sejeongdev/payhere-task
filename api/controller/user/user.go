@@ -6,6 +6,7 @@ import (
 	cutil "payhere/api/util"
 	"payhere/config"
 	"payhere/model"
+	"payhere/repository"
 	"payhere/service"
 
 	"github.com/gin-gonic/gin"
@@ -20,6 +21,7 @@ type userHTTPHandler struct {
 func NewHTTPUserHandler(
 	conf *config.ViperConfig,
 	payhere *gin.RouterGroup,
+	authRepo repository.AuthRepository,
 	userSvc service.UserService,
 ) {
 	handler := &userHTTPHandler{
@@ -29,7 +31,7 @@ func NewHTTPUserHandler(
 
 	user := payhere.Group("/user")
 
-	user.Use(middleware.JWTValidate(conf))
+	user.Use(middleware.JWTValidate(conf, authRepo))
 
 	user.POST("", handler.NewUser)
 }

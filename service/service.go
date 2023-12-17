@@ -9,7 +9,8 @@ import (
 // AuthService ...
 type AuthService interface {
 	Register(ctx context.Context, auth *model.UserAuth) (err error)
-	Login(ctx context.Context, auth *model.UserAuth) (rauth *model.UserAuth, err error)
+	Login(ctx context.Context, auth *model.UserAuth) (token *model.UserAuthToken, err error)
+	Logout(ctx context.Context, uid string) (err error)
 }
 
 // UserService ...

@@ -2,9 +2,11 @@ package auth
 
 import (
 	"net/http"
+	"payhere/api/middleware"
 	cutil "payhere/api/util"
 	"payhere/config"
 	"payhere/model"
+	"payhere/repository"
 	"payhere/service"
 
 	"github.com/gin-gonic/gin"
@@ -19,6 +21,7 @@ type authHTTPHandler struct {
 func NewHTTPAuthHandler(
 	conf *config.ViperConfig,
 	payhere *gin.RouterGroup,
+	authRepo repository.AuthRepository,
 	authSvc service.AuthService,
 ) {
 	handler := &authHTTPHandler{
@@ -30,6 +33,9 @@ func NewHTTPAuthHandler(
 
 	auth.POST("/register", handler.Register)
 	auth.POST("/login", handler.Login)
+
+	authToken := auth.Use(middleware.JWTValidate(conf, authRepo))
+	authToken.POST("/logout", handler.Logout)
 }
 
 // Register ...
@@ -71,12 +77,26 @@ func (h *authHTTPHandler) Login(c *gin.Context) {
 		return
 	}
 
-	auth, err := h.authSvc.Login(ctx, auth)
+	token, err := h.authSvc.Login(ctx, auth)
 	if err != nil {
 		rescode, msg := cutil.CauseError(err)
 		cutil.Response(c, rescode, msg)
 		return
 	}
 
-	cutil.Response(c, http.StatusOK, "ok", auth)
+	cutil.Response(c, http.StatusOK, "ok", token)
+}
+
+// Logout ...
+func (h *authHTTPHandler) Logout(c *gin.Context) {
+	// ctx := c.Request.Context()
+
+	// auth, err := h.authSvc.Logout(ctx)
+	// if err != nil {
+	// 	rescode, msg := cutil.CauseError(err)
+	// 	cutil.Response(c, rescode, msg)
+	// 	return
+	// }
+
+	cutil.Response(c, http.StatusOK, "ok")
 }
