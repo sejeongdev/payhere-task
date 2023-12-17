@@ -12,7 +12,7 @@ import (
 // UserAuth ...
 type UserAuth struct {
 	UID          string `json:"uid" gorm:"primaryKey"`
-	Phone        string `json:"phone" gorm:"type:varchar(13)"`
+	Phone        string `json:"phone" gorm:"type:varchar(13);uniqueIndex"`
 	SessionState string `json:"-" gorm:"type:longtext"`
 	Secret       string `json:"-" gorm:"type:longtext"`
 
